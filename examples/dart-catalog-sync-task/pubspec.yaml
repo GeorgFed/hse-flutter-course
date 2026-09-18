@@ -1,0 +1,14 @@
+name: dart_catalog_sync_task
+description: Dart 3 practice with value equality, List, Map, Set, errors, and logging.
+version: 1.0.0
+publish_to: none
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  collection: ^1.19.1
+
+dev_dependencies:
+  lints: ^5.1.1
+  test: ^1.25.15

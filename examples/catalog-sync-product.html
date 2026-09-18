@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Продуктовый смысл синхронизации каталога</title>
+  <style>
+    :root { --ink:#142338; --muted:#5b7186; --blue:#075bcc; --line:#ced9e4; --paper:#fff; --bg:#edf2f7; --add:#087452; --remove:#9a3c28; --change:#a36200; --same:#687b8d; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font:18px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; }
+    main { width:min(1420px,100%); margin:auto; padding:38px; }
+    header,.section { background:var(--paper); border:1px solid var(--line); padding:38px 42px; margin-bottom:22px; }
+    header { border-top:6px solid var(--blue); }
+    h1 { margin:0 0 14px; color:var(--blue); font-size:clamp(36px,4.3vw,64px); line-height:1.05; letter-spacing:-.04em; }
+    h2 { margin:0 0 20px; font-size:29px; letter-spacing:-.02em; }
+    h3 { margin:0 0 10px; font-size:21px; }
+    p { margin:0; max-width:980px; }
+    .thesis { font-size:22px; color:var(--muted); }
+    .flow { display:grid; grid-template-columns:1fr 58px 1fr 58px 1fr; gap:12px; align-items:stretch; }
+    .stage { border:1px solid var(--line); padding:22px; background:#f8fafc; }
+    .number { color:var(--blue); font:700 13px/1.2 ui-monospace,monospace; letter-spacing:.06em; margin-bottom:12px; }
+    .arrow { display:grid; place-items:center; color:var(--blue); font-size:38px; font-weight:700; }
+    .cases { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
+    .case { border:1px solid var(--line); padding:22px; min-width:0; }
+    .case.changed { border-top:5px solid var(--change); }
+    .case.added { border-top:5px solid var(--add); }
+    .case.removed { border-top:5px solid var(--remove); }
+    .case.same { border-top:5px solid var(--same); }
+    .comparison { display:grid; grid-template-columns:1fr 38px 1fr; gap:10px; align-items:center; margin:16px 0; }
+    .value { background:#f5f8fb; border:1px solid #dce5ed; padding:13px; font-family:ui-monospace,monospace; min-height:72px; }
+    .value small { display:block; color:var(--muted); font-family:inherit; }
+    .result { font-weight:700; }
+    .changed .result { color:var(--change); }
+    .added .result { color:var(--add); }
+    .removed .result { color:var(--remove); }
+    .same .result { color:var(--same); }
+    .impact { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+    .impact div { border-left:4px solid var(--blue); padding:8px 16px; }
+    .impact b { display:block; margin-bottom:5px; }
+    .final { background:#132638; color:#edf6ff; padding:26px 30px; font:17px/1.7 ui-monospace,monospace; white-space:pre-wrap; }
+    @media(max-width:1000px) {
+      main { padding:16px; } header,.section { padding:26px; }
+      .flow { grid-template-columns:1fr; }
+      .arrow { transform:rotate(90deg); min-height:40px; }
+      .cases,.impact { grid-template-columns:1fr; }
+    }
+    @media(max-width:620px) { .comparison { grid-template-columns:1fr; } .comparison>.arrow { transform:rotate(90deg); } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Зачем сравнивать две версии каталога</h1>
+    <p class="thesis">Приложение уже показывает товары. С бэкенда приходит новый список. Вместо полного обновления нужно определить только карточки, состояние которых действительно изменилось.</p>
+  </header>
+
+  <section class="section">
+    <h2>Продуктовый поток</h2>
+    <div class="flow">
+      <div class="stage"><div class="number">01 · БЫЛО</div><h3>Локальный каталог</h3><p>Версия, которую пользователь сейчас видит на экране.</p></div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div class="stage"><div class="number">02 · ПРИШЛО</div><h3>Новый каталог</h3><p>Актуальные товары, цены и свойства с бэкенда.</p></div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div class="stage"><div class="number">03 · РЕЗУЛЬТАТ</div><h3>Set изменившихся id</h3><p>Какие карточки добавить, удалить или обновить.</p></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Четыре продуктовых сценария</h2>
+    <div class="cases">
+      <article class="case changed">
+        <h3>1. Товар изменился</h3>
+        <div class="comparison"><div class="value">coffee<small>Кофе · 159 ₽</small></div><div class="arrow">→</div><div class="value">coffee<small>Кофе · 179 ₽</small></div></div>
+        <p class="result">Результат: coffee попадает в Set — карточку нужно обновить.</p>
+      </article>
+      <article class="case added">
+        <h3>2. Товар появился</h3>
+        <div class="comparison"><div class="value">—<small>товара не было</small></div><div class="arrow">→</div><div class="value">water<small>Вода · 50 ₽</small></div></div>
+        <p class="result">Результат: water попадает в Set — карточку нужно добавить.</p>
+      </article>
+      <article class="case removed">
+        <h3>3. Товар исчез</h3>
+        <div class="comparison"><div class="value">tea<small>Чай · 99 ₽</small></div><div class="arrow">→</div><div class="value">—<small>товара больше нет</small></div></div>
+        <p class="result">Результат: tea попадает в Set — карточку нужно удалить.</p>
+      </article>
+      <article class="case same">
+        <h3>4. Товар не изменился</h3>
+        <div class="comparison"><div class="value">milk<small>Молоко · 89 ₽</small></div><div class="arrow">→</div><div class="value">milk<small>Молоко · 89 ₽</small></div></div>
+        <p class="result">Результат: milk не попадает в Set — ничего делать не нужно.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Продуктовый смысл результата</h2>
+    <div class="impact">
+      <div><b>Точечное обновление</b>Приложение знает, какие карточки затронуты новой версией данных.</div>
+      <div><b>Предсказуемое поведение</b>Добавление, удаление и изменение описаны одним результатом — множеством id.</div>
+      <div><b>Наблюдаемость</b>Логи показывают размер каталогов и число обнаруженных изменений.</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Что увидим в консоли</h2>
+    <div class="final">Изменившиеся товары: [coffee, tea, water]
+LOG: Каталог: 2 товаров
+LOG: Каталог: 2 товаров
+LOG: Изменено: 3 товаров</div>
+  </section>
+</main>
+</body>
+</html>
