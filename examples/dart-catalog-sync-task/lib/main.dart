@@ -69,10 +69,20 @@ abstract interface class ProductCartManager {
     List<Product> current, {
     LogSink? log,
   });
+  /// Ищет по имени без учёта регистра, фильтрует по цене и категории.
+  /// Возвращает новый список: цена по возрастанию, затем id.
+  /// Входной список не изменяется; null отключает соответствующий фильтр.
+  List<Product> searchProducts(
+    List<Product> products, {
+    String query = '',
+    int? maxPriceRubles,
+    String? category,
+  });
+
 }
 
 ProductCartManager createProductCartManager() {
-  // TODO 2–4: создайте реализацию ProductCartManager и верните её здесь.
+  // TODO 2–5: создайте реализацию ProductCartManager и верните её здесь.
   throw UnimplementedError();
 }
 
@@ -107,4 +117,15 @@ void main() {
   } on FormatException catch (error) {
     print('Не удалось сравнить списки товаров: $error');
   }
+  const catalog = [
+    Product(id: 'coffee', name: 'Кофе', priceRubles: 179, category: 'Напитки'),
+    Product(id: 'tea', name: 'Чай', priceRubles: 99, category: 'Напитки'),
+    Product(id: 'coffee-decaf', name: 'Кофе без кофеина', priceRubles: 249, category: 'Напитки'),
+    Product(id: 'cookie', name: 'Печенье', priceRubles: 99),
+    Product(id: 'water', name: 'Вода', priceRubles: 50, category: 'Напитки'),
+  ];
+  final found = manager.searchProducts(catalog,
+      query: ' КоФе ', maxPriceRubles: 200, category: 'Напитки');
+  print('Найденные товары: ${found.map((product) => product.id).toList()}');
+
 }
